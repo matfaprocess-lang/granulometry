@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>آنالیز دانه‌بندی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Vazirmatn',sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh;direction:rtl}
+:root{
+  --bg0:#0f1117;--bg1:#161b27;--bg2:#1e2535;--bg3:#252d40;
+  --accent:#3b82f6;--accent2:#22d3ee;--accent3:#f59e0b;
+  --border:#2e3a52;--text1:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+  --green:#10b981;--red:#ef4444;--purple:#a78bfa;
+}
+.app{max-width:1400px;margin:0 auto;padding:24px}
+header{display:flex;align-items:center;gap:16px;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--border)}
+.logo{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+header h1{font-size:22px;font-weight:700;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header p{font-size:13px;color:var(--text3);margin-top:2px}
+
+.tabs{display:flex;gap:4px;background:var(--bg2);padding:4px;border-radius:10px;margin-bottom:24px;width:fit-content}
+.tab{padding:8px 18px;border-radius:7px;border:none;background:none;color:var(--text2);font-family:inherit;font-size:13px;cursor:pointer;transition:.2s}
+.tab.active{background:var(--accent);color:#fff;font-weight:500}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:14px;padding:20px}
+.card-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:14px;display:flex;align-items:center;gap:8px;text-transform:uppercase;letter-spacing:.5px}
+.card-title i{color:var(--accent);font-size:16px}
+
+/* Sieve selector */
+.mesh-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px}
+.mesh-btn{padding:8px 6px;border:1.5px solid var(--border);border-radius:8px;background:var(--bg2);color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;transition:.2s;text-align:center;line-height:1.3}
+.mesh-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mesh-btn.selected{border-color:var(--accent);background:rgba(59,130,246,.15);color:var(--accent);font-weight:600}
+.mesh-btn .mesh-um{font-size:10px;color:var(--text3);display:block}
+.mesh-btn.selected .mesh-um{color:rgba(59,130,246,.7)}
+
+/* Add custom sieve */
+.custom-row{display:flex;gap:8px;margin-top:10px}
+input,select{background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);font-family:inherit;font-size:13px;padding:8px 12px;outline:none;transition:.2s}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+input[type=number]{width:120px}
+.btn{padding:8px 16px;border-radius:8px;border:none;font-family:inherit;font-size:13px;cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px;font-weight:500}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#2563eb}
+.btn-ghost{background:var(--bg2);color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)}
+.btn-success{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.3)}
+
+/* Data table */
+.data-table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.data-table th{background:var(--bg2);padding:10px 12px;text-align:center;color:var(--text3);font-weight:500;font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.data-table th:first-child{border-radius:8px 0 0 0;text-align:right}
+.data-table th:last-child{border-radius:0 8px 0 0}
+.data-table td{padding:9px 12px;text-align:center;border-bottom:1px solid var(--border);transition:.15s}
+.data-table td:first-child{text-align:right;color:var(--text2)}
+.data-table tr:hover td{background:rgba(59,130,246,.05)}
+.data-table tr:last-child td{border-bottom:none;font-weight:600;color:var(--accent2);background:rgba(34,211,238,.05)}
+.data-table input{width:90px;padding:5px 8px;font-size:13px;text-align:center;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2)}
+.data-table input:focus{background:rgba(59,130,246,.12)}
+
+/* Stat cards */
+.stat{background:var(--bg2);border-radius:10px;padding:14px 16px;border:1px solid var(--border)}
+.stat-label{font-size:11px;color:var(--text3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.stat-value{font-size:22px;font-weight:700}
+.stat-unit{font-size:12px;color:var(--text3);margin-top:2px}
+
+/* Chart area */
+#chartWrap{position:relative;width:100%;height:420px;background:var(--bg1);border-radius:12px;padding:16px;border:1px solid var(--border)}
+.chart-controls{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.toggle-group{display:flex;gap:4px;background:var(--bg2);padding:3px;border-radius:8px;border:1px solid var(--border)}
+.toggle-btn{padding:5px 12px;border-radius:6px;border:none;background:none;color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;transition:.2s}
+.toggle-btn.on{background:var(--accent);color:#fff}
+
+/* Sample management */
+.sample-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.sample-tab{padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:none;color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:6px}
+.sample-tab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.sample-tab .del-s{opacity:0;font-size:14px;transition:.15s;line-height:1}
+.sample-tab:hover .del-s{opacity:1}
+.color-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+
+/* D-value calculator */
+.d-calc{background:var(--bg2);border-radius:10px;padding:16px;border:1px solid var(--border)}
+.d-calc-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.d-result{font-size:20px;font-weight:700;color:var(--accent2)}
+.d-result-label{font-size:12px;color:var(--text3);margin-top:2px}
+
+/* Paste modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:999;backdrop-filter:blur(4px)}
+.modal{background:var(--bg1);border:1px solid var(--border);border-radius:16px;padding:24px;width:560px;max-width:95vw}
+.modal h3{font-size:17px;font-weight:600;margin-bottom:8px}
+.modal p{font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.6}
+textarea{width:100%;height:180px;resize:vertical;font-family:'Courier New',monospace;font-size:12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text1);padding:10px}
+
+/* Legend */
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.legend-line{width:24px;height:3px;border-radius:2px}
+
+/* Progress bar for % passing */
+.pct-bar{height:4px;background:rgba(59,130,246,.15);border-radius:2px;overflow:hidden;margin-top:4px}
+.pct-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:.4s}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.section-gap{height:20px}
+.row-actions{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-blue{background:rgba(59,130,246,.15);color:var(--accent);border:1px solid rgba(59,130,246,.25)}
+
+/* Responsive */
+@media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr}}
+@media(max-width:600px){.mesh-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr))}}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">⚙</div>
+  <div>
+    <h1>آنالیز دانه‌بندی مواد معدنی</h1>
+    <p>Particle Size Distribution Analyzer — نسخه ۲.۰</p>
+  </div>
+  <div style="margin-right:auto;display:flex;gap:8px">
+    <button class="btn btn-ghost" onclick="showPasteModal()"><i class="ti ti-clipboard-text"></i>وارد کردن داده</button>
+    <button class="btn btn-ghost" onclick="exportChart()"><i class="ti ti-camera"></i>خروجی تصویر</button>
+  </div>
+</header>
+
+<!-- Sample Tabs -->
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+  <div class="sample-tabs" id="sampleTabs"></div>
+  <button class="btn btn-ghost" onclick="addSample()"><i class="ti ti-plus"></i>نمونه جدید</button>
+</div>
+
+<!-- Step 1: Sieve Selection -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-title"><i class="ti ti-filter"></i>انتخاب سرند‌ها</div>
+  <div class="mesh-grid" id="meshGrid"></div>
+  <div class="custom-row">
+    <input type="number" id="customSize" placeholder="سایز دلخواه (µm)" min="1" max="200000">
+    <button class="btn btn-ghost" onclick="addCustomSieve()"><i class="ti ti-plus"></i>افزودن سرند</button>
+    <button class="btn btn-ghost" onclick="clearAll()" style="margin-right:auto"><i class="ti ti-trash"></i>پاک کردن</button>
+  </div>
+</div>
+
+<!-- Step 2: Data Entry -->
+<div class="card" style="margin-bottom:20px">
+  <div class="row-actions">
+    <div class="card-title" style="margin-bottom:0"><i class="ti ti-table"></i>ورود وزن‌ها</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="sortSieves()"><i class="ti ti-sort-descending"></i>مرتب‌سازی</button>
+      <button class="btn btn-primary" onclick="calculate()"><i class="ti ti-calculator"></i>محاسبه</button>
+    </div>
+  </div>
+  <div id="tableWrap" style="overflow-x:auto;margin-top:14px">
+    <p style="color:var(--text3);font-size:13px;text-align:center;padding:20px">ابتدا سرندهای مورد نظر را انتخاب کنید.</p>
+  </div>
+</div>
+
+<!-- Results + Chart -->
+<div id="resultsSection" style="display:none">
+
+  <!-- Stats -->
+  <div class="grid3" style="margin-bottom:20px" id="statsGrid"></div>
+
+  <!-- D-value Calculator -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title"><i class="ti ti-percentage"></i>محاسبه D-values (درصد عبوری از اندازه مشخص)</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="d-calc">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:10px;font-weight:600">محاسبه اندازه ذره برای درصد عبوری مشخص</div>
+        <div class="d-calc-row">
+          <span style="font-size:13px;color:var(--text2)">D</span>
+          <input type="number" id="dPct" value="80" min="1" max="99" style="width:70px" onchange="calcDValue()">
+          <span style="font-size:13px;color:var(--text2)">% =</span>
+          <div>
+            <div class="d-result" id="dResult">—</div>
+            <div class="d-result-label">میکرون (درون‌یابی لگاریتمی)</div>
+          </div>
+          <button class="btn btn-ghost" style="margin-right:auto" onclick="calcDValue()"><i class="ti ti-refresh"></i>محاسبه</button>
+        </div>
+        <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.5px">
+            D اصلاح‌شده — درون‌یابی خطی فقط بین دو سرند مجاور
+          </div>
+          <div class="d-calc-row">
+            <div>
+              <div class="d-result" id="dCorrected" style="color:#10b981">—</div>
+              <div class="d-result-label">میکرون</div>
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-right:16px" id="dCorrectedBracket"></div>
+          </div>
+        </div>
+      </div>
+      <div class="d-calc">
+        <div style="font-size:12px;color:var(--text3);margin-bottom:10px;font-weight:600">محاسبه درصد عبوری برای اندازه مشخص</div>
+        <div class="d-calc-row">
+          <span style="font-size:13px;color:var(--text2)">اندازه ذره:</span>
+          <input type="number" id="sizeQuery" placeholder="میکرون" style="width:130px" onchange="calcPassingAtSize()">
+          <span style="font-size:13px;color:var(--text2)">درصد عبوری =</span>
+          <div>
+            <div class="d-result" id="passingResult">—</div>
+            <div class="d-result-label">درصد</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="row-actions">
+      <div class="card-title" style="margin-bottom:0"><i class="ti ti-chart-line"></i>نمودار دانه‌بندی</div>
+    </div>
+    <div class="chart-controls">
+      <div class="toggle-group">
+        <button class="toggle-btn on" id="btnLog" onclick="setXScale('log')">لگاریتمی</button>
+        <button class="toggle-btn" id="btnLin" onclick="setXScale('linear')">خطی</button>
+      </div>
+      <div class="toggle-group">
+        <button class="toggle-btn on" id="btnMicron" onclick="setXUnit('micron')">میکرون</button>
+        <button class="toggle-btn" id="btnMm" onclick="setXUnit('mm')">میلی‌متر</button>
+        <button class="toggle-btn" id="btnMesh" onclick="setXUnit('mesh')">مش</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-right:auto">
+        <label style="font-size:12px;color:var(--text3)">نمایش خطوط راهنما:</label>
+        <input type="checkbox" id="showGrid" checked onchange="updateChart()">
+      </div>
+    </div>
+    <div id="chartWrap"><canvas id="psdChart" role="img" aria-label="نمودار دانه‌بندی مواد معدنی">نمودار درصد عبوری ذرات بر حسب اندازه</canvas></div>
+    <div class="legend" id="chartLegend"></div>
+  </div>
+
+  <!-- Results Table -->
+  <div class="card">
+    <div class="card-title"><i class="ti ti-table"></i>جدول نتایج کامل</div>
+    <div id="resultTableWrap" style="overflow-x:auto"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- Paste Modal -->
+<div class="modal-overlay" id="pasteModal" style="display:none">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
+      <div>
+        <h3><i class="ti ti-clipboard-text" style="color:var(--accent)"></i> وارد کردن داده از جدول</h3>
+        <p style="margin-top:6px;margin-bottom:0">داده‌ها را از Excel یا هر جدول دیگری کپی و اینجا Paste کنید.<br>فرمت: هر ردیف یک سرند — <code style="color:var(--accent);font-size:11px">اندازه (µm) [Tab] وزن روی سرند (g)</code></p>
+      </div>
+      <button class="btn btn-ghost" onclick="hidePasteModal()" style="padding:6px 10px"><i class="ti ti-x"></i></button>
+    </div>
+    <textarea id="pasteArea" placeholder="مثال:&#10;50000	0&#10;25000	12.5&#10;12500	38.2&#10;6300	55.1&#10;3150	42.8&#10;1600	29.3&#10;800	18.7&#10;400	9.2&#10;200	4.1&#10;pan	85.3"></textarea>
+    <div style="font-size:11px;color:var(--text3);margin-top:6px;margin-bottom:12px">
+      • ستون اول: اندازه سرند به میکرون (یا کلمه "pan" برای زیر آخرین سرند)<br>
+      • ستون دوم: وزن روی سرند به گرم<br>
+      • جداکننده: Tab یا کاما یا فاصله
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="parsePaste()"><i class="ti ti-check"></i>وارد کردن</button>
+      <button class="btn btn-ghost" onclick="hidePasteModal()">انصراف</button>
+    </div>
+    <div id="pasteError" style="color:var(--red);font-size:12px;margin-top:8px;display:none"></div>
+  </div>
+</div>
+
+<script>
+const STANDARD_SIEVES = [
+  {label:'2 in',micron:50800,mesh:'2"'},
+  {label:'1.5 in',micron:38100,mesh:'1.5"'},
+  {label:'1 in',micron:25400,mesh:'1"'},
+  {label:'3/4 in',micron:19050,mesh:'3/4"'},
+  {label:'1/2 in',micron:12700,mesh:'1/2"'},
+  {label:'3/8 in',micron:9525,mesh:'3/8"'},
+  {label:'#4',micron:4750,mesh:'#4'},
+  {label:'#6',micron:3350,mesh:'#6'},
+  {label:'#8',micron:2360,mesh:'#8'},
+  {label:'#10',micron:2000,mesh:'#10'},
+  {label:'#16',micron:1180,mesh:'#16'},
+  {label:'#18',micron:1000,mesh:'#18'},
+  {label:'#20',micron:850,mesh:'#20'},
+  {label:'#30',micron:600,mesh:'#30'},
+  {label:'#35',micron:500,mesh:'#35'},
+  {label:'#40',micron:425,mesh:'#40'},
+  {label:'#50',micron:300,mesh:'#50'},
+  {label:'#60',micron:250,mesh:'#60'},
+  {label:'#70',micron:212,mesh:'#70'},
+  {label:'#80',micron:180,mesh:'#80'},
+  {label:'#100',micron:150,mesh:'#100'},
+  {label:'#120',micron:125,mesh:'#120'},
+  {label:'#140',micron:106,mesh:'#140'},
+  {label:'#170',micron:90,mesh:'#170'},
+  {label:'#200',micron:75,mesh:'#200'},
+  {label:'#230',micron:63,mesh:'#230'},
+  {label:'#270',micron:53,mesh:'#270'},
+  {label:'#325',micron:45,mesh:'#325'},
+  {label:'#400',micron:38,mesh:'#400'},
+  {label:'#500',micron:25,mesh:'#500'},
+  {label:'#635',micron:20,mesh:'#635'},
+];
+
+const SAMPLE_COLORS = ['#3b82f6','#22d3ee','#f59e0b','#a78bfa','#10b981','#f97316','#ec4899'];
+
+let samples = [];
+let currentSample = 0;
+let chart = null;
+let xScale = 'log';
+let xUnit = 'micron';
+
+function initApp(){
+  renderMeshGrid();
+  addSample('نمونه ۱');
+}
+
+function renderMeshGrid(){
+  const g = document.getElementById('meshGrid');
+  g.innerHTML = STANDARD_SIEVES.map((s,i)=>`
+    <button class="mesh-btn" id="mb${i}" onclick="toggleSieve(${i})">
+      ${s.label}
+      <span class="mesh-um">${s.micron>=1000?(s.micron/1000)+'mm':s.micron+'µm'}</span>
+    </button>`).join('');
+}
+
+function getCurrentSample(){return samples[currentSample];}
+
+function toggleSieve(idx){
+  const s = getCurrentSample();
+  const micron = STANDARD_SIEVES[idx].micron;
+  const pos = s.sieves.findIndex(x=>x.micron===micron&&!x.custom);
+  if(pos>=0){
+    s.sieves.splice(pos,1);
+    document.getElementById('mb'+idx).classList.remove('selected');
+  } else {
+    s.sieves.push({...STANDARD_SIEVES[idx],weight:''});
+    document.getElementById('mb'+idx).classList.add('selected');
+  }
+  renderDataTable();
+}
+
+function addCustomSieve(){
+  const v = parseFloat(document.getElementById('customSize').value);
+  if(!v||v<=0){alert('لطفاً یک عدد مثبت وارد کنید.');return;}
+  const s = getCurrentSample();
+  if(s.sieves.find(x=>x.micron===v)){alert('این سرند قبلاً اضافه شده.');return;}
+  s.sieves.push({label:v>=1000?(v/1000)+'mm':v+'µm',micron:v,mesh:'-',weight:'',custom:true});
+  document.getElementById('customSize').value='';
+  renderDataTable();
+}
+
+function sortSieves(){
+  const s = getCurrentSample();
+  s.sieves.sort((a,b)=>b.micron-a.micron);
+  renderDataTable();
+}
+
+function clearAll(){
+  const s = getCurrentSample();
+  s.sieves=[];
+  document.querySelectorAll('.mesh-btn').forEach(b=>b.classList.remove('selected'));
+  renderDataTable();
+}
+
+function syncMeshButtons(){
+  document.querySelectorAll('.mesh-btn').forEach((b,i)=>{
+    const m = STANDARD_SIEVES[i].micron;
+    const has = getCurrentSample().sieves.find(x=>x.micron===m&&!x.custom);
+    b.classList.toggle('selected',!!has);
+  });
+}
+
+function renderDataTable(){
+  const s = getCurrentSample();
+  const wrap = document.getElementById('tableWrap');
+  if(!s.sieves.length){
+    wrap.innerHTML='<p style="color:var(--text3);font-size:13px;text-align:center;padding:20px">ابتدا سرندهای مورد نظر را انتخاب کنید.</p>';
+    return;
+  }
+  const sorted = [...s.sieves].sort((a,b)=>b.micron-a.micron);
+  let html=`<table class="data-table"><thead><tr>
+    <th>سرند</th><th>اندازه (µm)</th><th>مش</th>
+    <th>وزن روی سرند (g)</th><th></th></tr></thead><tbody>`;
+  sorted.forEach((sv,i)=>{
+    html+=`<tr>
+      <td>${sv.label}</td>
+      <td>${sv.micron}</td>
+      <td>${sv.mesh||'-'}</td>
+      <td><input type="number" min="0" step="0.01" value="${sv.weight||''}" 
+          placeholder="0.00"
+          onchange="updateWeight(${sv.micron},this.value)"
+          onkeydown="tableKeyNav(event,${i})"></td>
+      <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:11px" 
+          onclick="removeSieve(${sv.micron})"><i class="ti ti-x"></i></button></td>
+    </tr>`;
+  });
+  html+=`<tr><td colspan="3" style="text-align:right;font-weight:600;font-size:12px;color:var(--text3)">Pan (زیر آخرین سرند)</td>
+    <td><input type="number" min="0" step="0.01" value="${s.pan||''}" 
+        placeholder="0.00" onchange="s_pan(this.value)"></td><td></td></tr>`;
+  html+=`</tbody></table>`;
+  wrap.innerHTML=html;
+}
+
+function tableKeyNav(e,idx){
+  const inputs = document.querySelectorAll('#tableWrap input[type=number]');
+  if(e.key==='Enter'||e.key==='ArrowDown'){e.preventDefault();inputs[idx+1]&&inputs[idx+1].focus();}
+  if(e.key==='ArrowUp'){e.preventDefault();inputs[idx-1]&&inputs[idx-1].focus();}
+}
+
+function s_pan(v){getCurrentSample().pan=parseFloat(v)||0;}
+
+function updateWeight(micron,val){
+  const sv = getCurrentSample().sieves.find(x=>x.micron===micron);
+  if(sv) sv.weight=parseFloat(val)||0;
+}
+
+function removeSieve(micron){
+  const s = getCurrentSample();
+  s.sieves=s.sieves.filter(x=>x.micron!==micron);
+  const std = STANDARD_SIEVES.findIndex(x=>x.micron===micron);
+  if(std>=0) document.getElementById('mb'+std)?.classList.remove('selected');
+  renderDataTable();
+}
+
+function calculate(){
+  const s = getCurrentSample();
+  const allSieves = [...s.sieves].sort((a,b)=>b.micron-a.micron);
+  const pan = parseFloat(s.pan)||0;
+  const weights = allSieves.map(sv=>parseFloat(sv.weight)||0);
+  const total = weights.reduce((a,b)=>a+b,0)+pan;
+  if(total===0){alert('لطفاً وزن‌ها را وارد کنید.');return;}
+
+  let cumRetained=0;
+  s.results=[];
+  allSieves.forEach((sv,i)=>{
+    cumRetained+=weights[i];
+    const pctRetained=(weights[i]/total)*100;
+    const cumPctRetained=(cumRetained/total)*100;
+    const pctPassing=100-cumPctRetained;
+    s.results.push({micron:sv.micron,label:sv.label,mesh:sv.mesh,
+      weight:weights[i],cumRetained,pctRetained,cumPctRetained,pctPassing});
+  });
+  // Add point at 0 passing for pan
+  s.totalWeight=total;
+  s.pan=pan;
+
+  renderStats();
+  renderResultTable();
+  renderChart();
+  calcDValue();
+  document.getElementById('resultsSection').style.display='block';
+  document.getElementById('resultsSection').scrollIntoView({behavior:'smooth'});
+}
+
+function interpolateD(results,pct){
+  // Log-log interpolation across all points
+  const pts = results.map(r=>({x:r.micron,y:r.pctPassing})).reverse();
+  if(pct<=pts[0].y) return null;
+  if(pct>=pts[pts.length-1].y) return null;
+  for(let i=1;i<pts.length;i++){
+    if(pts[i].y>=pct&&pts[i-1].y<=pct){
+      const t=(pct-pts[i-1].y)/(pts[i].y-pts[i-1].y);
+      return Math.exp(Math.log(pts[i-1].x)+(Math.log(pts[i].x)-Math.log(pts[i-1].x))*t);
+    }
+  }
+  return null;
+}
+
+function interpolateDLinear(results,pct){
+  // Linear interpolation strictly between the two bracketing sieves only
+  const pts = results.map(r=>({x:r.micron,y:r.pctPassing,label:r.label})).reverse();
+  for(let i=1;i<pts.length;i++){
+    if(pts[i].y>=pct&&pts[i-1].y<=pct){
+      const x0=pts[i-1].x, y0=pts[i-1].y;
+      const x1=pts[i].x,   y1=pts[i].y;
+      const d = x0 + (pct-y0)*(x1-x0)/(y1-y0);
+      return {value:d, lower:{x:x0,y:y0,label:pts[i-1].label}, upper:{x:x1,y:y1,label:pts[i].label}};
+    }
+  }
+  return null;
+}
+
+function interpolatePassing(results,sizeMicron){
+  const pts = results.map(r=>({x:r.micron,y:r.pctPassing})).sort((a,b)=>a.x-b.x);
+  if(sizeMicron<=pts[0].x) return 0;
+  if(sizeMicron>=pts[pts.length-1].x) return 100;
+  for(let i=1;i<pts.length;i++){
+    if(pts[i].x>=sizeMicron){
+      const lx0=Math.log(pts[i-1].x),lx1=Math.log(pts[i].x),lxq=Math.log(sizeMicron);
+      const t=(lxq-lx0)/(lx1-lx0);
+      return pts[i-1].y+(pts[i].y-pts[i-1].y)*t;
+    }
+  }
+  return 100;
+}
+
+function calcDValue(){
+  const s = getCurrentSample();
+  if(!s.results) return;
+  const pct = parseFloat(document.getElementById('dPct').value)||80;
+  const d = interpolateD(s.results,pct);
+  const dLin = interpolateDLinear(s.results,pct);
+  document.getElementById('dResult').textContent = d ? d.toFixed(1) : '—';
+  if(dLin){
+    document.getElementById('dCorrected').textContent = dLin.value.toFixed(1);
+    document.getElementById('dCorrectedBracket').textContent =
+      'بین ' + dLin.lower.label + ' (' + dLin.lower.y.toFixed(1) + '%) و ' + dLin.upper.label + ' (' + dLin.upper.y.toFixed(1) + '%)';
+  } else {
+    document.getElementById('dCorrected').textContent = '—';
+    document.getElementById('dCorrectedBracket').textContent = '';
+  }
+  updateDAnnotation(d, pct);
+}
+
+function calcPassingAtSize(){
+  const s = getCurrentSample();
+  if(!s.results) return;
+  const size = parseFloat(document.getElementById('sizeQuery').value);
+  if(!size){document.getElementById('passingResult').textContent='—';return;}
+  const p = interpolatePassing(s.results,size);
+  document.getElementById('passingResult').textContent = p.toFixed(2);
+}
+
+function renderStats(){
+  const s = getCurrentSample();
+  const r = s.results;
+  const d10=interpolateD(r,10),d50=interpolateD(r,50),d80=interpolateD(r,80),d90=interpolateD(r,90);
+  const cu = (d60=interpolateD(r,60))&&d10 ? (d60/d10).toFixed(2) : '—';
+  const grid = document.getElementById('statsGrid');
+  const fmt=v=>v?v.toFixed(1)+'µm':'—';
+  grid.innerHTML=`
+    <div class="stat"><div class="stat-label">وزن کل نمونه</div><div class="stat-value" style="color:var(--accent2)">${s.totalWeight.toFixed(2)}</div><div class="stat-unit">گرم</div></div>
+    <div class="stat"><div class="stat-label">D₁₀</div><div class="stat-value" style="color:var(--green)">${fmt(d10)}</div><div class="stat-unit">اندازه که ۱۰٪ مواد ریزتر از آنند</div></div>
+    <div class="stat"><div class="stat-label">D₅₀ (میانه)</div><div class="stat-value" style="color:var(--accent)">${fmt(d50)}</div><div class="stat-unit">اندازه که ۵۰٪ مواد ریزتر از آنند</div></div>
+    <div class="stat"><div class="stat-label">D₈₀</div><div class="stat-value" style="color:var(--accent3)">${fmt(d80)}</div><div class="stat-unit">اندازه که ۸۰٪ مواد ریزتر از آنند</div></div>
+    <div class="stat"><div class="stat-label">D₉₀</div><div class="stat-value" style="color:var(--purple)">${fmt(d90)}</div><div class="stat-unit">اندازه که ۹۰٪ مواد ریزتر از آنند</div></div>
+    <div class="stat"><div class="stat-label">ضریب یکنواختی (Cᵤ)</div><div class="stat-value" style="color:var(--text1)">${cu}</div><div class="stat-unit">D₆₀ / D₁₀</div></div>
+  `;
+}
+
+function renderResultTable(){
+  const s = getCurrentSample();
+  let html=`<table class="data-table"><thead><tr>
+    <th>سرند</th><th>اندازه (µm)</th>
+    <th>وزن روی سرند (g)</th>
+    <th>وزن تجمعی روی سرند (g)</th>
+    <th>درصد روی سرند (%)</th>
+    <th>درصد تجمعی روی سرند (%)</th>
+    <th>درصد تجمعی عبوری (%)</th>
+  </tr></thead><tbody>`;
+  s.results.forEach(r=>{
+    const bar=`<div class="pct-bar"><div class="pct-fill" style="width:${r.pctPassing.toFixed(1)}%"></div></div>`;
+    html+=`<tr>
+      <td>${r.label}</td>
+      <td>${r.micron}</td>
+      <td>${r.weight.toFixed(2)}</td>
+      <td>${r.cumRetained.toFixed(2)}</td>
+      <td>${r.pctRetained.toFixed(2)}</td>
+      <td>${r.cumPctRetained.toFixed(2)}</td>
+      <td><div>${r.pctPassing.toFixed(2)}%</div>${bar}</td>
+    </tr>`;
+  });
+  html+=`<tr><td>Pan</td><td>—</td><td>${s.pan.toFixed(2)}</td><td>${s.totalWeight.toFixed(2)}</td><td>${((s.pan/s.totalWeight)*100).toFixed(2)}</td><td>100.00</td><td>0.00</td></tr>`;
+  html+=`</tbody></table>`;
+  document.getElementById('resultTableWrap').innerHTML=html;
+}
+
+function buildChartData(){
+  return samples.filter(s=>s.results&&s.results.length).map((s,si)=>{
+    const pts = s.results.map(r=>{
+      let xv = xUnit==='mm' ? r.micron/1000 : xUnit==='mesh' ? micronToMesh(r.micron) : r.micron;
+      return {x:xv,y:parseFloat(r.pctPassing.toFixed(2))};
+    });
+    // add 100% at coarsest
+    const coarsest = s.results[0];
+    let xv0 = xUnit==='mm' ? coarsest.micron/1000 : xUnit==='mesh' ? micronToMesh(coarsest.micron) : coarsest.micron;
+    pts.unshift({x:xv0,y:100});
+    pts.sort((a,b)=>a.x-b.x);
+    return {
+      label:s.name,
+      data:pts,
+      borderColor:SAMPLE_COLORS[si%SAMPLE_COLORS.length],
+      backgroundColor:SAMPLE_COLORS[si%SAMPLE_COLORS.length]+'22',
+      borderWidth:2.5,
+      pointRadius:4,
+      pointHoverRadius:6,
+      tension:0.35,
+      fill:false,
+    };
+  });
+}
+
+function micronToMesh(micron){
+  const s=STANDARD_SIEVES.find(x=>x.micron===micron);
+  if(!s) return micron;
+  const m=parseFloat(s.mesh.replace('#',''));
+  return isNaN(m)?micron:m;
+}
+
+let dAnnotationPlugin = {
+  id:'dAnnot',
+  afterDraw(chart){
+    if(!chart._dAnnot) return;
+    const {xVal,yVal,color} = chart._dAnnot;
+    const xScale=chart.scales.x, yScale=chart.scales.y;
+    const xPx=xScale.getPixelForValue(xVal);
+    const yPx=yScale.getPixelForValue(yVal);
+    const ctx=chart.ctx;
+    ctx.save();
+    ctx.setLineDash([5,4]);
+    ctx.strokeStyle=color+'bb';
+    ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(xPx,yScale.bottom);ctx.lineTo(xPx,yPx);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(xScale.left,yPx);ctx.lineTo(xPx,yPx);ctx.stroke();
+    ctx.restore();
+    ctx.save();
+    ctx.fillStyle=color;
+    ctx.beginPath();ctx.arc(xPx,yPx,5,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+};
+
+function updateDAnnotation(d,pct){
+  if(!chart||!d) return;
+  chart._dAnnot = {
+    xVal: xUnit==='mm'?d/1000:xUnit==='mesh'?micronToMesh(Math.round(d)):d,
+    yVal: pct,
+    color: SAMPLE_COLORS[currentSample%SAMPLE_COLORS.length]
+  };
+  chart.update('none');
+}
+
+function renderChart(){
+  const datasets = buildChartData();
+  if(!datasets.length) return;
+  const xLabel = xUnit==='mm'?'اندازه (mm)':xUnit==='mesh'?'مش':'اندازه (µm)';
+  const isLog = xScale==='log';
+
+  Chart.unregister(dAnnotationPlugin);
+  Chart.register(dAnnotationPlugin);
+
+  if(chart){chart.destroy();chart=null;}
+  const ctx=document.getElementById('psdChart').getContext('2d');
+  chart=new Chart(ctx,{
+    type:'line',
+    data:{datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          callbacks:{
+            label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}% عبوری`
+          }
+        }
+      },
+      scales:{
+        x:{
+          type:isLog?'logarithmic':'linear',
+          title:{display:true,text:xLabel,color:'#94a3b8',font:{family:'Vazirmatn',size:12}},
+          grid:{color:document.getElementById('showGrid').checked?'rgba(255,255,255,0.07)':'transparent'},
+          ticks:{color:'#94a3b8',font:{family:'Vazirmatn',size:11},
+            callback:v=>{
+              if(xUnit==='mm') return Number(v.toFixed(3));
+              if(v>=1000) return (v/1000)+'k';
+              return v;
+            }
+          }
+        },
+        y:{
+          min:0,max:100,
+          title:{display:true,text:'درصد تجمعی عبوری (%)',color:'#94a3b8',font:{family:'Vazirmatn',size:12}},
+          grid:{color:document.getElementById('showGrid').checked?'rgba(255,255,255,0.07)':'transparent'},
+          ticks:{color:'#94a3b8',font:{family:'Vazirmatn',size:11},callback:v=>v+'%'}
+        }
+      }
+    },
+    plugins:[dAnnotationPlugin]
+  });
+  renderLegend(datasets);
+  document.getElementById('chartWrap').style.height='420px';
+}
+
+function renderLegend(datasets){
+  const leg=document.getElementById('chartLegend');
+  leg.innerHTML=datasets.map(d=>`
+    <span class="legend-item">
+      <span class="legend-line" style="background:${d.borderColor}"></span>
+      ${d.label}
+    </span>`).join('');
+}
+
+function setXScale(type){
+  xScale=type;
+  document.getElementById('btnLog').classList.toggle('on',type==='log');
+  document.getElementById('btnLin').classList.toggle('on',type==='linear');
+  if(chart) renderChart();
+}
+function setXUnit(unit){
+  xUnit=unit;
+  document.getElementById('btnMicron').classList.toggle('on',unit==='micron');
+  document.getElementById('btnMm').classList.toggle('on',unit==='mm');
+  document.getElementById('btnMesh').classList.toggle('on',unit==='mesh');
+  if(chart) renderChart();
+}
+function updateChart(){if(chart) renderChart();}
+
+function addSample(name){
+  const n = name||`نمونه ${samples.length+1}`;
+  samples.push({name:n,sieves:[],pan:0,results:null});
+  currentSample=samples.length-1;
+  renderSampleTabs();
+  syncMeshButtons();
+  renderDataTable();
+}
+
+function renderSampleTabs(){
+  const wrap=document.getElementById('sampleTabs');
+  wrap.innerHTML=samples.map((s,i)=>`
+    <button class="sample-tab ${i===currentSample?'active':''}" onclick="switchSample(${i})">
+      <span class="color-dot" style="background:${SAMPLE_COLORS[i%SAMPLE_COLORS.length]}"></span>
+      ${s.name}
+      ${samples.length>1?`<span class="del-s" onclick="deleteSample(event,${i})">×</span>`:''}
+    </button>`).join('');
+}
+
+function switchSample(idx){
+  currentSample=idx;
+  renderSampleTabs();
+  syncMeshButtons();
+  renderDataTable();
+  if(samples[idx].results){
+    renderStats();
+    renderResultTable();
+    renderChart();
+    calcDValue();
+    document.getElementById('resultsSection').style.display='block';
+  } else {
+    document.getElementById('resultsSection').style.display='none';
+  }
+}
+
+function deleteSample(e,idx){
+  e.stopPropagation();
+  if(samples.length===1){alert('باید حداقل یک نمونه وجود داشته باشد.');return;}
+  samples.splice(idx,1);
+  currentSample=Math.min(currentSample,samples.length-1);
+  renderSampleTabs();
+  syncMeshButtons();
+  renderDataTable();
+  if(samples[currentSample].results) renderChart();
+}
+
+function exportChart(){
+  const wrap=document.getElementById('chartWrap');
+  html2canvas(wrap,{backgroundColor:'#161b27',scale:2}).then(canvas=>{
+    const link=document.createElement('a');
+    link.download='granulometry_chart.png';
+    link.href=canvas.toDataURL();
+    link.click();
+  });
+}
+
+function showPasteModal(){document.getElementById('pasteModal').style.display='flex';}
+function hidePasteModal(){document.getElementById('pasteModal').style.display='none';}
+
+function parsePaste(){
+  const text=document.getElementById('pasteArea').value.trim();
+  const errEl=document.getElementById('pasteError');
+  errEl.style.display='none';
+  if(!text){errEl.textContent='متنی وارد نشده.';errEl.style.display='block';return;}
+  const lines=text.split('\n').filter(l=>l.trim());
+  const s=getCurrentSample();
+  const newSieves=[];
+  let pan=0;
+  let errors=[];
+  lines.forEach((line,i)=>{
+    const parts=line.trim().split(/[\t,;\s]+/);
+    if(parts.length<2){errors.push(`ردیف ${i+1}: فرمت اشتباه`);return;}
+    const sizeStr=parts[0].trim().toLowerCase();
+    const weight=parseFloat(parts[1]);
+    if(isNaN(weight)){errors.push(`ردیف ${i+1}: وزن نامعتبر`);return;}
+    if(sizeStr==='pan'||sizeStr==='زیر'){
+      pan=weight;return;
+    }
+    const micron=parseFloat(sizeStr);
+    if(!micron||micron<=0){errors.push(`ردیف ${i+1}: اندازه نامعتبر "${sizeStr}"`);return;}
+    const std=STANDARD_SIEVES.find(x=>x.micron===micron);
+    newSieves.push({
+      label:std?std.label:(micron>=1000?(micron/1000)+'mm':micron+'µm'),
+      micron,mesh:std?std.mesh:'-',
+      weight,custom:!std
+    });
+  });
+  if(errors.length){errEl.innerHTML=errors.join('<br>');errEl.style.display='block';return;}
+  if(!newSieves.length){errEl.textContent='هیچ داده معتبری یافت نشد.';errEl.style.display='block';return;}
+  s.sieves=newSieves;
+  s.pan=pan;
+  hidePasteModal();
+  document.getElementById('pasteArea').value='';
+  syncMeshButtons();
+  renderDataTable();
+  setTimeout(calculate,100);
+}
+
+initApp();
+</script>
+</body>
+</html>
